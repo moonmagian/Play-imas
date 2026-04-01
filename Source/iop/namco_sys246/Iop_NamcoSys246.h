@@ -130,6 +130,13 @@ namespace Iop
 			void ReadBackupRam(uint32, uint8*, uint32);
 			void WriteBackupRam(uint32, const uint8*, uint32);
 
+            void UpdateImas(uint8);
+            uint64 GetTime();
+            bool ImasTilt4, ImasLeft, ImasRight, ImasButton2;
+
+            uint64 beginTime = 0;
+            LARGE_INTEGER Frequency;
+
 			Namco::CAcRam& m_acRam;
 
 			CSifModuleAdapter m_module001;

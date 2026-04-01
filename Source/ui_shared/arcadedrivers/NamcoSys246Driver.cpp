@@ -17,6 +17,7 @@
 #include "iop/namco_sys246/Iop_NamcoAcAta.h"
 #include "iop/namco_sys246/Iop_NamcoAcRam.h"
 #include "iop/namco_sys246/Iop_NamcoPadMan.h"
+#include "iop/namco_sys246/iop_uartdriver.h"
 
 void CNamcoSys246Driver::PrepareEnvironment(CPS2VM* virtualMachine, const ARCADE_MACHINE_DEF& def)
 {
@@ -103,6 +104,13 @@ void CNamcoSys246Driver::PrepareEnvironment(CPS2VM* virtualMachine, const ARCADE
 		auto padManModule = std::make_shared<Iop::Namco::CPadMan>();
 		iopBios->RegisterHleModuleReplacement("rom0:PADMAN", padManModule);
 		iopBios->RegisterHleModuleReplacement("rom0:SIO2MAN", padManModule);
+
+        auto uartModule = std::make_shared<Iop::UARTDriver>(virtualMachine->m_iop->m_ram);
+        iopBios->RegisterModule(uartModule);
+        iopBios->RegisterHleModuleReplacement("UART_driver", uartModule);
+        iopBios->RegisterHleModuleReplacement("mc0:ACUART", uartModule);
+        iopBios->RegisterHleModuleReplacement("ac0:ACUART", uartModule);
+        iopBios->RegisterHleModuleReplacement("acuart", uartModule);
 
 		{
 			auto namcoArcadeModule = std::make_shared<Iop::Namco::CSys246>(*iopBios->GetSifman(), *iopBios->GetSifcmd(), *acRam, def.id);

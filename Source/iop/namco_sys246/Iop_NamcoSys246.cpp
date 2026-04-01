@@ -9,6 +9,7 @@
 #include "PathUtils.h"
 #include "iop/Iop_SifCmd.h"
 #include "iop/namco_sys246/Iop_NamcoAcRam.h"
+#include <iostream>
 
 using namespace Iop;
 using namespace Iop::Namco;
@@ -120,6 +121,7 @@ CSys246::CSys246(CSifMan& sifMan, CSifCmd& sifCmd, Namco::CAcRam& acRam, const s
 #ifdef _WIN32
 	// start recoil output server
 	m_mameCompatOutput = std::make_unique<MameCompatOutput>(gameId);
+    QueryPerformanceFrequency(&this->Frequency);
 #endif
 }
 
@@ -284,7 +286,13 @@ void CSys246::ProcessJvsPacket(const uint8* input, uint8* output)
 				(*output++) = 0x01; //channels
 
 				(*dstSize) += 4;
-			}
+            }
+
+            (*output++) = 0x12; //GPIO output
+            (*output++) = 0x06; //slot count
+            (*output++) = 0x00;
+            (*output++) = 0x00;
+            (*dstSize) += 4;
 
 			(*output++) = 0x00; //End of features
 
@@ -331,8 +339,35 @@ void CSys246::ProcessJvsPacket(const uint8* input, uint8* output)
 			(*output++) = m_testButtonState;
 
 			//(*output++) = (m_jvsSystemButtonState == 0x03) ? 0x80 : 0;  //Test
-			(*output++) = static_cast<uint8>(m_jvsButtonState[0]);      //Player 1
-			(*output++) = static_cast<uint8>(m_jvsButtonState[0] >> 8); //Player 1
+            auto outputJvsButtonState = m_jvsButtonState[0];
+            if (this->ImasButton2) {
+                outputJvsButtonState |= ((uint16)0x01);
+            }
+            else {
+                outputJvsButtonState &= ~((uint16)0x01);
+            }
+            if (this->ImasLeft) {
+                outputJvsButtonState |= ((uint16)0x08);
+            }
+            else {
+                outputJvsButtonState &= ~((uint16)0x08);
+            }
+            if (this->ImasRight) {
+                outputJvsButtonState |= ((uint16)0x04);
+            }
+            else {
+
+                outputJvsButtonState &= ~((uint16)0x04);
+            }
+            // if (this->ImasTilt4) {
+            //     outputJvsButtonState |= (uint16)1 << 3;
+            // }
+            // else {
+
+            //     outputJvsButtonState &= ~(((uint16)1) << 3);
+            // }
+            (*output++) = static_cast<uint8>(outputJvsButtonState);      //Player 1
+            (*output++) = static_cast<uint8>(outputJvsButtonState >> 8); //Player 1
 			(*dstSize) += 4;
 
 			if(playerCount == 2)
@@ -374,7 +409,7 @@ void CSys246::ProcessJvsPacket(const uint8* input, uint8* output)
 			}
 		}
 		break;
-		case JVS_CMD_COININC: // actually never received this jvs cmd
+        case JVS_CMD_COININC: // actually never received this jvs cmd
 		{
 			assert(inSize != 3);
 			uint8 slotCount = (*input++);
@@ -486,21 +521,22 @@ void CSys246::ProcessJvsPacket(const uint8* input, uint8* output)
 			for(int i = 1; i <= bytecount; i++)
 			{
 				uint8 gpvalue = (*input++);
+                this->UpdateImas(gpvalue);
 				inWorkChecksum += gpvalue;
 				inSize--;
 
-				if(i == 1)
-				{
-					// value1 0xC0 indicates P1 recoil triggered
-					int p1Recoil = (gpvalue >= 0x50) ? 1 : 0;
-					if(p1Recoil != m_p1RecoilLast)
-					{
-						m_p1RecoilLast = p1Recoil;
-#ifdef _WIN32
-						m_mameCompatOutput->SendRecoil(p1Recoil);
-#endif
-					}
-				}
+// 				if(i == 1)
+// 				{
+// 					// value1 0xC0 indicates P1 recoil triggered
+// 					int p1Recoil = (gpvalue >= 0x50) ? 1 : 0;
+// 					if(p1Recoil != m_p1RecoilLast)
+// 					{
+// 						m_p1RecoilLast = p1Recoil;
+// #ifdef _WIN32
+// 						m_mameCompatOutput->SendRecoil(p1Recoil);
+// #endif
+// 					}
+// 				}
 			}
 
 			(*output++) = 0x01; //Command success
@@ -515,6 +551,47 @@ void CSys246::ProcessJvsPacket(const uint8* input, uint8* output)
 	}
 	FRAMEWORK_MAYBE_UNUSED uint8 inChecksum = (*input);
 	assert(inChecksum == (inWorkChecksum & 0xFF));
+}
+
+uint64 CSys246::GetTime() {
+    LARGE_INTEGER t;
+    QueryPerformanceCounter(&t);
+    t.QuadPart *= 1000;
+    return t.QuadPart / this->Frequency.QuadPart;
+}
+void CSys246::UpdateImas(uint8 gpvalue) {
+    auto currentTimeStamp = this->GetTime();
+    this->ImasTilt4 = false;
+    if (gpvalue & 0x10) {
+        auto delta = currentTimeStamp - this->beginTime;
+        if (delta % 6000 < 1000) {
+            this->ImasLeft = true;
+        }
+        else {
+            this->ImasLeft = false;
+        }
+
+        if (delta % 6000 > 2000 && delta % 6000 < 5000) {
+            this->ImasButton2 = true;
+        }
+        else {
+            this->ImasButton2 = false;
+        }
+
+        if (delta % 6000 > 3000 && delta % 6000 < 4000) {
+            this->ImasRight = true;
+        }
+        else {
+            this->ImasRight = false;
+        }
+    }
+    else
+    {
+        this->beginTime = currentTimeStamp;
+        this->ImasLeft = true;
+        this->ImasRight = false;
+        this->ImasButton2 = false;
+    }
 }
 
 void CSys246::SaveState(Framework::CZipArchiveWriter& archive) const
