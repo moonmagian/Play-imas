@@ -1,3 +1,29 @@
+A Play! fork with card reader support & shutter check fix to run IDOLM@STER.
+Currently only works on Windows.
+
+# Running IDOLM@STER
+## Step 1
+Put the rom chd in ~\Documents\Play Data Files\arcaderoms\idolm\NM00022 IDM1-HA (HDD).chd
+
+Put the dongle zip in ~\Documents\Play Data Files\arcaderoms\idolm.zip
+
+## Step 2
+Get YaCardEmu for card reader emulation: https://github.com/GXTX/YACardEmu
+
+Set `serialpath = \\.\pipe\imas` in the YaCardEmu config. **Start YaCardEmu.exe before starting the game**.
+
+## Step 3
+Start the emulator and start "The iDOLM@STER", everything should work.
+
+## Addition
+Press L3+R3 to enter test menu. You can set freeplay and disable closing time there.
+
+## How does it work
+Play! already has great support for System2x6. We only need to implement acuart, which is well documented in ps2 sdk: https://github.com/ps2dev/ps2sdk/tree/master/iop/arcade/acuart.
+Currently the implementation uses a named pipe to communicate with YaCardEmu.
+
+The game also checks shutter status through 3 jvs outputs (cross, left and right). It checks for a specific sequence after sending 0x10 through GPIO. The implementation overrides the jvs outputs after getting the GPIO signal.
+
 # Play! #
 Play! is a PlayStation2 emulator for Windows, macOS, UNIX, Android, iOS & web browser platforms.
 
