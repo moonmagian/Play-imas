@@ -5,7 +5,6 @@
 #include "filesystem_def.h"
 #include "StdStream.h"
 #include "Singleton.h"
-
 #ifndef LOGGING_ENABLED
 #ifdef _DEBUG
 #define LOGGING_ENABLED 1

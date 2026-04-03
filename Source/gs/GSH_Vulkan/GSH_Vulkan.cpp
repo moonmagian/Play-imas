@@ -646,6 +646,7 @@ void CGSH_Vulkan::VertexKick(uint8 registerId, uint64 data)
 
 	if(m_vtxCount == 0) return;
 
+
 	bool drawingKick = (registerId == GS_REG_XYZ2) || (registerId == GS_REG_XYZF2);
 	bool fog = (registerId == GS_REG_XYZF2) || (registerId == GS_REG_XYZF3);
 
@@ -1146,6 +1147,13 @@ void CGSH_Vulkan::Prim_Triangle()
 	float x1 = pos[0].GetX(), x2 = pos[1].GetX(), x3 = pos[2].GetX();
 	float y1 = pos[0].GetY(), y2 = pos[1].GetY(), y3 = pos[2].GetY();
 	uint32 z1 = pos[0].nZ, z2 = pos[1].nZ, z3 = pos[2].nZ;
+
+    // Idolm@ster lesson fix.
+    // Don't know the root cause but some triangle strips will have z==0 and fail depth check.
+    // Should find a better way for this but currently manually set to 0x00ffffffu in lesson.
+    z1 = z1 || !m_primitiveMode.nTexture || !m_idolmLessonFixOn ? z1 : 0x00ffffffu;
+    z2 = z2 || !m_primitiveMode.nTexture || !m_idolmLessonFixOn ? z2 : 0x00ffffffu;
+    z3 = z3 || !m_primitiveMode.nTexture || !m_idolmLessonFixOn ? z3 : 0x00ffffffu;
 
 	RGBAQ rgbaq[3];
 	rgbaq[0] <<= m_vtxBuffer[2].rgbaq;

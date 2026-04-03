@@ -95,7 +95,7 @@ static const std::array<uint16, PS2::CControllerInfo::MAX_BUTTONS> g_defaultJvsS
 };
 // clang-format on
 
-CSys246::CSys246(CSifMan& sifMan, CSifCmd& sifCmd, Namco::CAcRam& acRam, const std::string& gameId)
+CSys246::CSys246(CSifMan& sifMan, CSifCmd& sifCmd, Namco::CAcRam& acRam, const std::string& gameId, CPS2VM* vm)
     : m_acRam(acRam)
     , m_gameId(gameId)
 {
@@ -117,6 +117,8 @@ CSys246::CSys246(CSifMan& sifMan, CSifCmd& sifCmd, Namco::CAcRam& acRam, const s
 	                                                      std::placeholders::_1, std::placeholders::_2));
 
 	m_jvsButtonBits = g_defaultJvsButtonBits;
+
+    this->m_vm = vm;
 
 #ifdef _WIN32
 	// start recoil output server
@@ -647,6 +649,16 @@ void CSys246::SetButtonState(unsigned int padNumber, PS2::CControllerInfo::BUTTO
 		{
 			m_jvsSystemButtonState &= ~g_defaultJvsSystemButtonBits[button];
 			m_jvsSystemButtonState |= (pressed ? g_defaultJvsSystemButtonBits[button] : 0);
+
+            if (button == PS2::CControllerInfo::L1) {
+                if (pressed && !this->m_imasFixToggle) {
+                    this->m_vm->GetGSHandler()->ToggleImasLessonFix();
+                    this->m_imasFixToggle = true;
+                }
+                else if (!pressed) {
+                    this->m_imasFixToggle = false;
+                }
+            }
 
 			if(m_jvsMode == JVS_MODE::DRIVE)
 			{

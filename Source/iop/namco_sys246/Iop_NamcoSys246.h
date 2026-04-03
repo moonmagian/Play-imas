@@ -10,6 +10,8 @@
 #include "filesystem_def.h"
 #ifdef _WIN32
 #include "iop/namco_sys246/MameCompatOutput.h"
+#include <iop/IopBios.h>
+#include <PS2VM.h>
 #endif
 
 namespace Iop
@@ -32,7 +34,7 @@ namespace Iop
 				TOUCH,
 			};
 
-			CSys246(CSifMan&, CSifCmd&, Namco::CAcRam&, const std::string&);
+            CSys246(CSifMan&, CSifCmd&, Namco::CAcRam&, const std::string&, CPS2VM* vm);
 			virtual ~CSys246() = default;
 
 			std::string GetId() const override;
@@ -169,6 +171,9 @@ namespace Iop
 
 			std::queue<uint8> m_serialQueue;
 			bool m_bgStrReportWheelPos = false;
+
+            CPS2VM* m_vm;
+            bool m_imasFixToggle = false;
 
 #ifdef _WIN32
 			// MAME-compatible network output listener

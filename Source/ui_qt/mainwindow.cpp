@@ -554,6 +554,11 @@ void MainWindow::CreateStatusBar()
 	m_msgLabel->setMinimumSize(fm.boundingRect("...").size());
 	m_msgLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
 
+    m_imasLessonLabel = new QLabel("lesson hack: off");
+    m_imasLessonLabel->setAlignment(Qt::AlignLeft);
+    m_imasLessonLabel->setMinimumSize(m_imasLessonLabel->minimumSizeHint());
+
+    statusBar()->addWidget(m_imasLessonLabel);
 	statusBar()->addWidget(m_msgLabel, 1);
 	statusBar()->addWidget(m_fpsLabel);
 	statusBar()->addWidget(m_cpuUsageLabel);
@@ -604,6 +609,14 @@ void MainWindow::updateStats()
 
 	auto eeUsageRatio = CStatsManager::ComputeCpuUsageRatio(cpuUtilisation.eeIdleTicks, cpuUtilisation.eeTotalTicks);
 	m_cpuUsageLabel->setText(QString("EE CPU: %1%").arg(static_cast<int>(eeUsageRatio)));
+
+    auto gs = m_virtualMachine->GetGSHandler();
+    if (gs->GetImasLessonFix()) {
+        m_imasLessonLabel->setText(QString("lesson hack: on"));
+    }
+    else {
+        m_imasLessonLabel->setText(QString("lesson hack: off"));
+    }
 
 	CStatsManager::GetInstance().ClearStats();
 }
@@ -912,7 +925,7 @@ void MainWindow::outputWindow_doubleClickEvent(QMouseEvent* ev)
 
 void MainWindow::outputWindow_mouseMoveEvent(QMouseEvent* ev)
 {
-	if(m_virtualMachine->HasGunListener())
+    if(m_virtualMachine->HasGunListener() || (m_virtualMachine->HasTouchListener() && (ev->buttons() & Qt::LeftButton)))
 	{
 		auto gsHandler = m_virtualMachine->GetGSHandler();
 		if(!gsHandler) return;
@@ -931,16 +944,23 @@ void MainWindow::outputWindow_mouseMoveEvent(QMouseEvent* ev)
 		mouseY -= vpOfsY;
 		mouseX = std::clamp<float>(mouseX, 0, vpWidth);
 		mouseY = std::clamp<float>(mouseY, 0, vpHeight);
-		m_virtualMachine->ReportGunPosition(
-		    static_cast<float>(mouseX) / static_cast<float>(vpWidth),
-		    static_cast<float>(mouseY) / static_cast<float>(vpHeight));
-	}
+        if (m_virtualMachine->HasGunListener()) {
+            m_virtualMachine->ReportGunPosition(
+                static_cast<float>(mouseX) / static_cast<float>(vpWidth),
+                static_cast<float>(mouseY) / static_cast<float>(vpHeight));
+        }
+        if (m_virtualMachine->HasTouchListener()) {
+            m_virtualMachine->ReportTouchPosition(
+                static_cast<float>(mouseX) / static_cast<float>(vpWidth),
+                static_cast<float>(mouseY) / static_cast<float>(vpHeight));
+        }
+    }
 }
 
 void MainWindow::outputWindow_mousePressEvent(QMouseEvent* ev)
 {
 	m_qtMouseInputProvider->OnMousePress(ev->button());
-	if(m_virtualMachine->HasTouchListener() && (ev->button() == Qt::LeftButton))
+    if(m_virtualMachine->HasTouchListener() && (ev->button() == Qt::LeftButton))
 	{
 		auto gsHandler = m_virtualMachine->GetGSHandler();
 		if(!gsHandler) return;

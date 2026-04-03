@@ -102,6 +102,7 @@ private:
 	QLabel* m_scaleFactorLabel = nullptr;
 	QLabel* m_cpuUsageLabel = nullptr;
 	QLabel* m_gsLabel = nullptr;
+    QLabel* m_imasLessonLabel = nullptr;
 #ifdef PROFILE
 	QLabel* m_profileStatsLabel = nullptr;
 #endif
