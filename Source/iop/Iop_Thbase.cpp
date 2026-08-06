@@ -17,6 +17,7 @@ using namespace Iop;
 #define FUNCTION_RELEASEWAITTHREAD "ReleaseWaitThread"
 #define FUNCTION_IRELEASEWAITTHREAD "iReleaseWaitThread"
 #define FUNCTION_GETTHREADID "GetThreadId"
+#define FUNCTION_CHECKTHREADSTACK "CheckThreadStack"
 #define FUNCTION_REFERTHREADSTATUS "ReferThreadStatus"
 #define FUNCTION_IREFERTHREADSTATUS "iReferThreadStatus"
 #define FUNCTION_SLEEPTHREAD "SleepThread"
@@ -82,6 +83,9 @@ std::string CThbase::GetFunctionName(unsigned int functionId) const
 		break;
 	case 20:
 		return FUNCTION_GETTHREADID;
+		break;
+	case 21:
+		return FUNCTION_CHECKTHREADSTACK;
 		break;
 	case 22:
 		return FUNCTION_REFERTHREADSTATUS;
@@ -189,6 +193,10 @@ void CThbase::Invoke(CMIPS& context, unsigned int functionId)
 		break;
 	case 20:
 		context.m_State.nGPR[CMIPS::V0].nD0 = static_cast<int32>(GetThreadId());
+		break;
+	case 21:
+		context.m_State.nGPR[CMIPS::V0].nD0 = CheckThreadStack(
+		    context.m_State.nGPR[CMIPS::SP].nV0);
 		break;
 	case 22:
 		context.m_State.nGPR[CMIPS::V0].nD0 = static_cast<int32>(ReferThreadStatus(
@@ -327,6 +335,15 @@ int32 CThbase::iReleaseWaitThread(uint32 threadId)
 uint32 CThbase::GetThreadId()
 {
 	return m_bios.GetCurrentThreadId();
+}
+
+int32 CThbase::CheckThreadStack(uint32 stackPointer)
+{
+	auto threadId = m_bios.GetCurrentThreadIdRaw();
+	if(threadId < 0) return 0;
+	auto thread = m_bios.GetThread(threadId);
+	if(!thread || (stackPointer < thread->stackBase)) return 0;
+	return stackPointer - thread->stackBase;
 }
 
 uint32 CThbase::ReferThreadStatus(uint32 threadId, uint32 statusPtr)

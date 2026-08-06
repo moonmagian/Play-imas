@@ -1945,6 +1945,14 @@ void CIopBios::CountTicks(uint32 ticks)
 	m_cdvdfsv->CountTicks(ticks);
 	m_mcserv->CountTicks(ticks, m_sifMan.get());
 	m_usbd->CountTicks(ticks);
+	for(const auto& modulePair : m_modules)
+	{
+		auto tickableModule = std::dynamic_pointer_cast<Iop::CTickableModule>(modulePair.second);
+		if(tickableModule)
+		{
+			tickableModule->CountTicks(ticks);
+		}
+	}
 #endif
 }
 

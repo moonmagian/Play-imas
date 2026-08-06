@@ -10,6 +10,7 @@ using namespace Iop;
 #define FUNCTION_STARTMODULE "StartModule"
 #define FUNCTION_LOADMODULEBUFFERADDRESS "LoadModuleBufferAddress"
 #define FUNCTION_LOADMODULEBUFFER "LoadModuleBuffer"
+#define FUNCTION_SETCHECKKELFPATHCALLBACK "SetCheckKelfPathCallback"
 #define FUNCTION_GETMODULEIDLIST "GetModuleIdList"
 #define FUNCTION_REFERMODULESTATUS "ReferModuleStatus"
 #define FUNCTION_GETMODULEIDLISTBYNAME "GetModuleIdListByName"
@@ -58,6 +59,9 @@ std::string CModload::GetFunctionName(unsigned int functionId) const
 		break;
 	case 10:
 		return FUNCTION_LOADMODULEBUFFER;
+		break;
+	case 13:
+		return FUNCTION_SETCHECKKELFPATHCALLBACK;
 		break;
 	case 16:
 		return FUNCTION_GETMODULEIDLIST;
@@ -117,6 +121,10 @@ void CModload::Invoke(CMIPS& context, unsigned int functionId)
 	case 10:
 		context.m_State.nGPR[CMIPS::V0].nD0 = static_cast<int32>(LoadModuleBuffer(
 		    context.m_State.nGPR[CMIPS::A0].nV0));
+		break;
+	case 13:
+		// KELF path validation is only used for encrypted executable loading.
+		context.m_State.nGPR[CMIPS::V0].nD0 = 0;
 		break;
 	case 16:
 		context.m_State.nGPR[CMIPS::V0].nD0 = static_cast<int32>(GetModuleIdList(

@@ -6,11 +6,7 @@
 #include "StdStream.h"
 #include "Singleton.h"
 #ifndef LOGGING_ENABLED
-#ifdef _DEBUG
-#define LOGGING_ENABLED 1
-#else
 #define LOGGING_ENABLED 0
-#endif
 #endif
 
 #if LOGGING_ENABLED

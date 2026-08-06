@@ -420,6 +420,7 @@ private:
 	void sc_WaitSema();
 	void sc_PollSema();
 	void sc_ReferSemaStatus();
+	void sc_SetOsdConfigParam();
 	void sc_GetOsdConfigParam();
 	void sc_GetCop0();
 	void sc_FlushCache();
@@ -427,6 +428,7 @@ private:
 	void sc_GsPutIMR();
 	void sc_SetVSyncFlag();
 	void sc_SetSyscall();
+	void sc_SifStopDma();
 	void sc_SifDmaStat();
 	void sc_SifSetDma();
 	void sc_SifSetDChain();

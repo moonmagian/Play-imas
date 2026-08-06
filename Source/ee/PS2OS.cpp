@@ -2842,6 +2842,12 @@ void CPS2OS::sc_ReferSemaStatus()
 	m_ee.m_State.nGPR[SC_RETURN].nD0 = id;
 }
 
+//4A
+void CPS2OS::sc_SetOsdConfigParam()
+{
+	m_ee.m_State.nGPR[SC_RETURN].nV0 = 0;
+}
+
 //4B
 void CPS2OS::sc_GetOsdConfigParam()
 {
@@ -2955,6 +2961,12 @@ void CPS2OS::sc_SetSyscall()
 
 	m_ee.m_State.nGPR[SC_RETURN].nV[0] = 0;
 	m_ee.m_State.nGPR[SC_RETURN].nV[1] = 0;
+}
+
+//6B
+void CPS2OS::sc_SifStopDma()
+{
+	m_ee.m_State.nGPR[SC_RETURN].nV0 = 0;
 }
 
 //76
@@ -3603,7 +3615,7 @@ CPS2OS::SystemCallHandler CPS2OS::m_sysCall[0x80] =
 	//0x40
 	&CPS2OS::sc_CreateSema,			&CPS2OS::sc_DeleteSema,				&CPS2OS::sc_SignalSema,				&CPS2OS::sc_SignalSema,				&CPS2OS::sc_WaitSema,			&CPS2OS::sc_PollSema,				&CPS2OS::sc_PollSema,			&CPS2OS::sc_ReferSemaStatus,
 	//0x48
-	&CPS2OS::sc_ReferSemaStatus,	&CPS2OS::sc_Unhandled,				&CPS2OS::sc_Unhandled,				&CPS2OS::sc_GetOsdConfigParam,		&CPS2OS::sc_Unhandled,			&CPS2OS::sc_Unhandled,				&CPS2OS::sc_Unhandled,			&CPS2OS::sc_Unhandled,
+	&CPS2OS::sc_ReferSemaStatus,	&CPS2OS::sc_Unhandled,				&CPS2OS::sc_SetOsdConfigParam,		&CPS2OS::sc_GetOsdConfigParam,		&CPS2OS::sc_Unhandled,			&CPS2OS::sc_Unhandled,				&CPS2OS::sc_Unhandled,			&CPS2OS::sc_Unhandled,
 	//0x50
 	&CPS2OS::sc_Unhandled,			&CPS2OS::sc_Unhandled,				&CPS2OS::sc_Unhandled,				&CPS2OS::sc_Unhandled,				&CPS2OS::sc_Unhandled,			&CPS2OS::sc_Unhandled,				&CPS2OS::sc_Unhandled,			&CPS2OS::sc_Unhandled,
 	//0x58
@@ -3611,7 +3623,7 @@ CPS2OS::SystemCallHandler CPS2OS::m_sysCall[0x80] =
 	//0x60
 	&CPS2OS::sc_Unhandled,			&CPS2OS::sc_Unhandled,				&CPS2OS::sc_Unhandled,				&CPS2OS::sc_GetCop0,				&CPS2OS::sc_FlushCache,			&CPS2OS::sc_Unhandled,				&CPS2OS::sc_Unhandled,			&CPS2OS::sc_Unhandled,
 	//0x68
-	&CPS2OS::sc_FlushCache,			&CPS2OS::sc_Unhandled,				&CPS2OS::sc_Unhandled,				&CPS2OS::sc_Unhandled,				&CPS2OS::sc_Unhandled,			&CPS2OS::sc_Unhandled,				&CPS2OS::sc_Unhandled,			&CPS2OS::sc_Unhandled,
+	&CPS2OS::sc_FlushCache,			&CPS2OS::sc_Unhandled,				&CPS2OS::sc_Unhandled,				&CPS2OS::sc_SifStopDma,				&CPS2OS::sc_Unhandled,			&CPS2OS::sc_Unhandled,				&CPS2OS::sc_Unhandled,			&CPS2OS::sc_Unhandled,
 	//0x70
 	&CPS2OS::sc_GsGetIMR,			&CPS2OS::sc_GsPutIMR,				&CPS2OS::sc_Unhandled,				&CPS2OS::sc_SetVSyncFlag,			&CPS2OS::sc_SetSyscall,			&CPS2OS::sc_Unhandled,				&CPS2OS::sc_SifDmaStat,			&CPS2OS::sc_SifSetDma,
 	//0x78

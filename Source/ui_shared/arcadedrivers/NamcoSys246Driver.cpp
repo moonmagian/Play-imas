@@ -16,6 +16,7 @@
 #include "iop/namco_sys246/Iop_NamcoAcCdvd.h"
 #include "iop/namco_sys246/Iop_NamcoAcAta.h"
 #include "iop/namco_sys246/Iop_NamcoAcRam.h"
+#include "iop/namco_sys246/Iop_AveNetwork.h"
 #include "iop/namco_sys246/Iop_NamcoPadMan.h"
 #include "iop/namco_sys246/iop_uartdriver.h"
 
@@ -111,6 +112,69 @@ void CNamcoSys246Driver::PrepareEnvironment(CPS2VM* virtualMachine, const ARCADE
         iopBios->RegisterHleModuleReplacement("mc0:ACUART", uartModule);
         iopBios->RegisterHleModuleReplacement("ac0:ACUART", uartModule);
         iopBios->RegisterHleModuleReplacement("acuart", uartModule);
+
+		auto aveNetwork = std::make_shared<Iop::Namco::CAveNetworkContext>(*iopBios, virtualMachine->m_iop->m_ram);
+		auto aveTcp = std::make_shared<Iop::Namco::CAveTcp>(aveNetwork);
+		auto avePpp = std::make_shared<Iop::Namco::CAvePpp>(aveNetwork);
+		auto aveDhcp = std::make_shared<Iop::Namco::CAveDhcp>(aveNetwork);
+		auto aveDevGlue = std::make_shared<Iop::Namco::CAveDevGlue>(virtualMachine->m_iop->m_ram);
+		auto aveAn986 = std::make_shared<Iop::Namco::CAveAn986>();
+		iopBios->RegisterModule(aveTcp);
+		iopBios->RegisterModule(avePpp);
+		iopBios->RegisterModule(aveDhcp);
+		iopBios->RegisterModule(aveDevGlue);
+		iopBios->RegisterModule(aveAn986);
+
+		for(const auto* path : {
+		        "AVETCP",
+		        "mc0:AVETCP",
+		        "ac0:AVETCP",
+		        "host0:../irxmake/avetcp/tcp/avetcp.irx",
+		        "AVE_TCP_31_Resident_Lib",
+		    })
+		{
+			iopBios->RegisterHleModuleReplacement(path, aveTcp);
+		}
+		for(const auto* path : {
+		        "AVEPPP",
+		        "mc0:AVEPPP",
+		        "ac0:AVEPPP",
+		        "host0:../irxmake/avetcp/ppp/aveppp.irx",
+		        "AVE_PPP_31_Resident_Lib",
+		    })
+		{
+			iopBios->RegisterHleModuleReplacement(path, avePpp);
+		}
+		for(const auto* path : {
+		        "AVEDHCP",
+		        "mc0:AVEDHCP",
+		        "ac0:AVEDHCP",
+		        "host0:../irxmake/avetcp/dhcp/avedhcp.irx",
+		        "AVE_DHCP_31_Resident_Lib",
+		    })
+		{
+			iopBios->RegisterHleModuleReplacement(path, aveDhcp);
+		}
+		for(const auto* path : {
+		        "DEVGLUE",
+		        "mc0:DEVGLUE",
+		        "ac0:DEVGLUE",
+		        "host0:../irxmake/avetcp/devglue/devglue.irx",
+		        "AVE_TCP_DEVGLUE_LIB",
+		    })
+		{
+			iopBios->RegisterHleModuleReplacement(path, aveDevGlue);
+		}
+		for(const auto* path : {
+		        "AN986",
+		        "mc0:AN986",
+		        "ac0:AN986",
+		        "host0:../irxmake/avetcp/drivers_s/an986.irx",
+		        "INET_AN986_driver",
+		    })
+		{
+			iopBios->RegisterHleModuleReplacement(path, aveAn986);
+		}
 
 		{
             auto namcoArcadeModule = std::make_shared<Iop::Namco::CSys246>(*iopBios->GetSifman(), *iopBios->GetSifcmd(), *acRam, def.id, virtualMachine);

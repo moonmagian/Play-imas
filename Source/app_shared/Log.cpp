@@ -14,7 +14,12 @@
 // clang-format off
 static const std::set<std::string, std::less<>> g_allowedLogs =
 {
-	//"iop_mcserv",
+	"iop_ave_network",
+};
+
+static const std::set<std::string, std::less<>> g_suppressedPrintLogs =
+{
+	"ps2os",
 };
 // clang-format on
 
@@ -23,11 +28,14 @@ CLog::CLog()
 	m_logBasePath = CAppConfig::GetInstance().GetBasePath() / LOG_PATH;
 	Framework::PathUtils::EnsurePathExists(m_logBasePath);
 	CAppConfig::GetInstance().RegisterPreferenceBoolean(PREF_LOG_SHOWPRINTS, false);
+#ifdef _DEBUG
 	m_showPrints = CAppConfig::GetInstance().GetPreferenceBoolean(PREF_LOG_SHOWPRINTS);
+#endif
 }
 
 void CLog::Print(const char* logName, const char* format, ...)
 {
+	if(g_suppressedPrintLogs.count(logName)) return;
 	if(!m_showPrints && !g_allowedLogs.count(logName)) return;
 	auto& logStream(GetLog(logName));
 	va_list args;

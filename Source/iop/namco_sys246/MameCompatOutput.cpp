@@ -50,7 +50,7 @@ void MameCompatOutput::Listen(std::string gameId)
 	sockaddr_in serverAddr;
 	serverAddr.sin_family = AF_INET;
 	serverAddr.sin_port = htons(8000);       // Port to listen on
-	serverAddr.sin_addr.s_addr = INADDR_ANY; // Listen on all available interfaces
+	serverAddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 
 	// Bind socket
 	if(bind(m_listenSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1)
@@ -68,17 +68,17 @@ void MameCompatOutput::Listen(std::string gameId)
 		return;
 	}
 
-	CLog::GetInstance().Print(LOG_NAME, "Listening on port 8000\r\n");
+	CLog::GetInstance().Print(LOG_NAME, "Listening on 127.0.0.1:8000\r\n");
 
 	while(m_doListen)
 	{
-		if(!m_clientSocket)
+		if(m_clientSocket == INVALID_SOCKET)
 		{
 			// Accept a connection
 			sockaddr_in clientAddr;
 			socklen_t clientAddrSize = sizeof(clientAddr);
-			int clientSocket = accept(m_listenSocket, (struct sockaddr*)&clientAddr, &clientAddrSize);
-			if(clientSocket == -1)
+			auto clientSocket = accept(m_listenSocket, (struct sockaddr*)&clientAddr, &clientAddrSize);
+			if(clientSocket == INVALID_SOCKET)
 			{
 				CLog::GetInstance().Warn(LOG_NAME, "Error accepting connection: %d\r\n", errno);
 				continue;
@@ -134,7 +134,7 @@ void MameCompatOutput::Stop()
 
 void MameCompatOutput::SendRecoil(int value)
 {
-	if(m_clientSocket)
+	if(m_clientSocket != INVALID_SOCKET)
 	{
 		// Send recoil event
 		std::string recoil = "mcuout1 = " + std::to_string(value) + "\r";
@@ -143,7 +143,7 @@ void MameCompatOutput::SendRecoil(int value)
 		{
 			CLog::GetInstance().Warn(LOG_NAME, "Error sending recoil string: %d\r\n", errno);
 			closesocket(m_clientSocket);
-			m_clientSocket = 0;
+			m_clientSocket = INVALID_SOCKET;
 		}
 	}
 }

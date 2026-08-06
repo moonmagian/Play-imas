@@ -37,6 +37,7 @@ namespace Iop
 		int32 ReleaseWaitThread(uint32);
 		int32 iReleaseWaitThread(uint32);
 		uint32 GetThreadId();
+		int32 CheckThreadStack(uint32);
 		uint32 ReferThreadStatus(uint32, uint32);
 		uint32 iReferThreadStatus(uint32, uint32);
 		uint32 SleepThread();

@@ -26,5 +26,12 @@ namespace Iop
 		static std::string PrintStringParameter(const uint8*, uint32);
 	};
 
+	class CTickableModule
+	{
+	public:
+		virtual ~CTickableModule() = default;
+		virtual void CountTicks(uint32) = 0;
+	};
+
 	typedef std::shared_ptr<CModule> ModulePtr;
 };
