@@ -13,6 +13,7 @@
 #include "Log.h"
 #include "SocketDef.h"
 #include "SocketStream.h"
+#include "../../Ps2Const.h"
 #include "../IopBios.h"
 #include "../Iop_Sysmem.h"
 
@@ -220,6 +221,7 @@ struct CAveNetworkContext::Implementation
 	static constexpr unsigned int MAX_UDP_SOCKETS = 8;
 	static constexpr unsigned int MAX_DNS_TICKETS = 8;
 	static constexpr uint16 TCP_WINDOW_SIZE = 4096;
+	static constexpr uint32 HOST_POLL_INTERVAL = PS2::IOP_CLOCK_OVER_FREQ / 1000;
 
 	enum class SOCKET_STATE
 	{
@@ -1513,8 +1515,32 @@ struct CAveNetworkContext::Implementation
 		}
 	}
 
-	void CountTicks(uint32)
+	void CountTicks(uint32 ticks)
 	{
+		// Guest callbacks and thread wakeups must retain the original per-tick timing.
+		for(unsigned int handle = 0; handle < m_tcpSockets.size(); handle++)
+		{
+			auto& socket = m_tcpSockets[handle];
+			// IOPINT checks a newly opened socket immediately and aborts quickly
+			// unless the nonblocking connection transition is observed.
+			if(socket.connectNotifyPending || (socket.state == SOCKET_STATE::CONNECTING))
+			{
+				PollConnect(handle);
+			}
+			if(socket.send.active && (socket.send.offset == socket.send.data.size()))
+			{
+				PollSend(handle);
+			}
+		}
+		for(unsigned int index = 0; index < m_udpSockets.size(); index++)
+		{
+			PollUdpCallback(index);
+		}
+
+		m_hostPollTicks += ticks;
+		if(m_hostPollTicks < HOST_POLL_INTERVAL) return;
+		m_hostPollTicks %= HOST_POLL_INTERVAL;
+
 		for(unsigned int handle = 0; handle < m_tcpSockets.size(); handle++)
 		{
 			auto& socket = m_tcpSockets[handle];
@@ -1533,7 +1559,6 @@ struct CAveNetworkContext::Implementation
 		}
 		for(unsigned int index = 0; index < m_udpSockets.size(); index++)
 		{
-			PollUdpCallback(index);
 			PollUdpReceive(index);
 		}
 	}
@@ -2429,6 +2454,7 @@ struct CAveNetworkContext::Implementation
 	bool m_pppConnected = false;
 	bool m_ndgInitialized = false;
 	bool m_ndgStarted = false;
+	uint64 m_hostPollTicks = 0;
 	std::string m_hostname;
 };
 

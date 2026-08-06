@@ -604,6 +604,7 @@ private:
 	typedef COsStructManager<VPL> VplList;
 	typedef COsStructManager<LOADEDMODULE> LoadedModuleList;
 	typedef std::map<std::string, Iop::ModulePtr, std::less<>> IopModuleMapType;
+	typedef std::map<std::string, std::shared_ptr<Iop::CTickableModule>, std::less<>> IopTickableModuleMapType;
 	typedef std::set<Iop::CModule*> ModuleSet;
 	typedef std::pair<uint32, uint32> ExecutableRange;
 
@@ -683,6 +684,7 @@ private:
 	MODULESTARTREQUEST m_moduleStartRequests[MAX_MODULESTARTREQUEST] = {};
 
 	IopModuleMapType m_modules;
+	IopTickableModuleMapType m_tickableModules;
 
 	OsVariableWrapper<uint32> m_currentThreadId;
 

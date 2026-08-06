@@ -194,10 +194,6 @@ void CThbase::Invoke(CMIPS& context, unsigned int functionId)
 	case 20:
 		context.m_State.nGPR[CMIPS::V0].nD0 = static_cast<int32>(GetThreadId());
 		break;
-	case 21:
-		context.m_State.nGPR[CMIPS::V0].nD0 = CheckThreadStack(
-		    context.m_State.nGPR[CMIPS::SP].nV0);
-		break;
 	case 22:
 		context.m_State.nGPR[CMIPS::V0].nD0 = static_cast<int32>(ReferThreadStatus(
 		    context.m_State.nGPR[CMIPS::A0].nV0,

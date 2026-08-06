@@ -1945,13 +1945,9 @@ void CIopBios::CountTicks(uint32 ticks)
 	m_cdvdfsv->CountTicks(ticks);
 	m_mcserv->CountTicks(ticks, m_sifMan.get());
 	m_usbd->CountTicks(ticks);
-	for(const auto& modulePair : m_modules)
+	for(const auto& modulePair : m_tickableModules)
 	{
-		auto tickableModule = std::dynamic_pointer_cast<Iop::CTickableModule>(modulePair.second);
-		if(tickableModule)
-		{
-			tickableModule->CountTicks(ticks);
-		}
+		modulePair.second->CountTicks(ticks);
 	}
 #endif
 }
@@ -3410,6 +3406,7 @@ void CIopBios::ReturnFromException()
 
 void CIopBios::DeleteModules()
 {
+	m_tickableModules.clear();
 	m_modules.clear();
 
 #ifdef _IOP_EMULATE_MODULES
@@ -3536,9 +3533,14 @@ std::string_view CIopBios::ReadModuleName(uint32 address)
 
 bool CIopBios::RegisterModule(const Iop::ModulePtr& module)
 {
-	bool registered = (m_modules.find(module->GetId()) != std::end(m_modules));
+	auto moduleId = module->GetId();
+	bool registered = (m_modules.find(moduleId) != std::end(m_modules));
 	if(registered) return false;
-	m_modules[module->GetId()] = module;
+	m_modules[moduleId] = module;
+	if(auto tickableModule = std::dynamic_pointer_cast<Iop::CTickableModule>(module))
+	{
+		m_tickableModules[moduleId] = std::move(tickableModule);
+	}
 	return true;
 }
 
@@ -3546,6 +3548,7 @@ bool CIopBios::ReleaseModule(const std::string& moduleName)
 {
 	auto moduleIterator = m_modules.find(moduleName);
 	if(moduleIterator == std::end(m_modules)) return false;
+	m_tickableModules.erase(moduleName);
 	m_modules.erase(moduleIterator);
 	return true;
 }
