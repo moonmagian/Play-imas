@@ -1148,13 +1148,6 @@ void CGSH_Vulkan::Prim_Triangle()
 	float y1 = pos[0].GetY(), y2 = pos[1].GetY(), y3 = pos[2].GetY();
 	uint32 z1 = pos[0].nZ, z2 = pos[1].nZ, z3 = pos[2].nZ;
 
-    // Idolm@ster lesson fix.
-    // Don't know the root cause but some triangle strips will have z==0 and fail depth check.
-    // Should find a better way for this but currently manually set to 0x00ffffffu in lesson.
-    z1 = z1 || !m_primitiveMode.nTexture || !m_idolmLessonFixOn ? z1 : 0x00ffffffu;
-    z2 = z2 || !m_primitiveMode.nTexture || !m_idolmLessonFixOn ? z2 : 0x00ffffffu;
-    z3 = z3 || !m_primitiveMode.nTexture || !m_idolmLessonFixOn ? z3 : 0x00ffffffu;
-
 	RGBAQ rgbaq[3];
 	rgbaq[0] <<= m_vtxBuffer[2].rgbaq;
 	rgbaq[1] <<= m_vtxBuffer[1].rgbaq;

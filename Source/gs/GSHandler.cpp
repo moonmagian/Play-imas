@@ -391,22 +391,6 @@ void CGSHandler::SetDrawEnabled(bool drawEnabled)
 	m_drawEnabled = drawEnabled;
 }
 
-bool CGSHandler::GetImasLessonFix() const
-{
-    return m_idolmLessonFixOn;
-}
-
-void CGSHandler::SetImasLessonFix(bool enabled)
-{
-    m_idolmLessonFixOn = enabled;
-}
-
-void CGSHandler::ToggleImasLessonFix()
-{
-    m_idolmLessonFixOn = !m_idolmLessonFixOn;
-}
-
-
 void CGSHandler::SetHBlank()
 {
 	std::lock_guard registerMutexLock(m_registerMutex);

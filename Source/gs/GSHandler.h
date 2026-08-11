@@ -840,10 +840,6 @@ public:
 	bool GetDrawEnabled() const;
 	void SetDrawEnabled(bool);
 
-    bool GetImasLessonFix() const;
-    void SetImasLessonFix(bool);
-    void ToggleImasLessonFix();
-
 	void WritePrivRegister(uint32, uint32);
 	uint32 ReadPrivRegister(uint32);
 
@@ -1137,7 +1133,6 @@ protected:
 	FrameDumpCallback m_frameDumpCallback;
 	bool m_regsDirty = false;
 	bool m_drawEnabled = true;
-    bool m_idolmLessonFixOn = false;
 	CINTC* m_intc = nullptr;
 	bool m_gsThreaded = true;
 	bool m_flipped = false;

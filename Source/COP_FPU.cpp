@@ -83,6 +83,48 @@ void CCOP_FPU::PushCCBit(uint32 mask)
 	m_codeGen->And();
 }
 
+static void CompileConvertToWord(CMipsJitter* codeGen, uint8 sourceRegister, uint8 destinationRegister)
+{
+	constexpr uint32 SIGN_BIT = 0x80000000;
+	constexpr uint32 ABS_MASK = 0x7FFFFFFF;
+	constexpr uint32 POSITIVE_OVERFLOW_LIMIT = 0x4F000000;
+
+	auto sourceOffset = offsetof(CMIPS, m_State.nCOP1[sourceRegister]);
+	auto destinationOffset = offsetof(CMIPS, m_State.nCOP1[destinationRegister]);
+
+	// The R5900 saturates out-of-range conversions instead of returning the
+	// host CPU's indefinite integer result.
+	codeGen->PushRel(sourceOffset);
+	codeGen->PushCst(ABS_MASK);
+	codeGen->And();
+	codeGen->PushCst(POSITIVE_OVERFLOW_LIMIT);
+	codeGen->BeginIf(Jitter::CONDITION_BL);
+	{
+		codeGen->FP_PushRel32(sourceOffset);
+		codeGen->FP_ToInt32TruncateS();
+		codeGen->FP_PullRel32(destinationOffset);
+	}
+	codeGen->Else();
+	{
+		codeGen->PushRel(sourceOffset);
+		codeGen->PushCst(SIGN_BIT);
+		codeGen->And();
+		codeGen->PushCst(0);
+		codeGen->BeginIf(Jitter::CONDITION_EQ);
+		{
+			codeGen->PushCst(0x7FFFFFFF);
+			codeGen->PullRel(destinationOffset);
+		}
+		codeGen->Else();
+		{
+			codeGen->PushCst(0x80000000);
+			codeGen->PullRel(destinationOffset);
+		}
+		codeGen->EndIf();
+	}
+	codeGen->EndIf();
+}
+
 //////////////////////////////////////////////////
 //General Opcodes
 //////////////////////////////////////////////////
@@ -359,9 +401,7 @@ void CCOP_FPU::NEG_S()
 //0D
 void CCOP_FPU::TRUNC_W_S()
 {
-	m_codeGen->FP_PushRel32(offsetof(CMIPS, m_State.nCOP1[m_fs]));
-	m_codeGen->FP_ToInt32TruncateS();
-	m_codeGen->FP_PullRel32(offsetof(CMIPS, m_State.nCOP1[m_fd]));
+	CompileConvertToWord(m_codeGen, m_fs, m_fd);
 }
 
 //16
@@ -482,9 +522,7 @@ void CCOP_FPU::CVT_W_S()
 {
 	//Load the rounding mode from FCSR?
 	//PS2 only supports truncate rounding mode
-	m_codeGen->FP_PushRel32(offsetof(CMIPS, m_State.nCOP1[m_fs]));
-	m_codeGen->FP_ToInt32TruncateS();
-	m_codeGen->FP_PullRel32(offsetof(CMIPS, m_State.nCOP1[m_fd]));
+	CompileConvertToWord(m_codeGen, m_fs, m_fd);
 }
 
 //28

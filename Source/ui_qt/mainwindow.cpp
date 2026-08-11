@@ -554,11 +554,6 @@ void MainWindow::CreateStatusBar()
 	m_msgLabel->setMinimumSize(fm.boundingRect("...").size());
 	m_msgLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
 
-    m_imasLessonLabel = new QLabel("lesson hack: off");
-    m_imasLessonLabel->setAlignment(Qt::AlignLeft);
-    m_imasLessonLabel->setMinimumSize(m_imasLessonLabel->minimumSizeHint());
-
-    statusBar()->addWidget(m_imasLessonLabel);
 	statusBar()->addWidget(m_msgLabel, 1);
 	statusBar()->addWidget(m_fpsLabel);
 	statusBar()->addWidget(m_cpuUsageLabel);
@@ -609,14 +604,6 @@ void MainWindow::updateStats()
 
 	auto eeUsageRatio = CStatsManager::ComputeCpuUsageRatio(cpuUtilisation.eeIdleTicks, cpuUtilisation.eeTotalTicks);
 	m_cpuUsageLabel->setText(QString("EE CPU: %1%").arg(static_cast<int>(eeUsageRatio)));
-
-    auto gs = m_virtualMachine->GetGSHandler();
-    if (gs->GetImasLessonFix()) {
-        m_imasLessonLabel->setText(QString("lesson hack: on"));
-    }
-    else {
-        m_imasLessonLabel->setText(QString("lesson hack: off"));
-    }
 
 	CStatsManager::GetInstance().ClearStats();
 }
