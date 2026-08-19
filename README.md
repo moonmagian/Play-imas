@@ -8,9 +8,11 @@ Put the rom chd in ~\Documents\Play Data Files\arcaderoms\idolm\NM00022 IDM1-HA 
 Put the dongle zip in ~\Documents\Play Data Files\arcaderoms\idolm.zip
 
 ## Step 2
-Get YaCardEmu for card reader emulation: https://github.com/GXTX/YACardEmu
+For YaCardEmu, get it from https://github.com/GXTX/YACardEmu and leave **Use real card reader** disabled in the emulator settings.
 
 Set `serialpath = \\.\pipe\imas` in the YaCardEmu config. **Start YaCardEmu.exe before starting the game**.
+
+For a real card reader/writer, install the USB-to-RS232 adapter driver, enable **Use real card reader**, and select its port under **Card reader COM**. The serial port uses 9600 bps, 8 data bits, no parity, 1 stop bit, and no flow control. Connect the reader before starting the game.
 
 ## Step 3
 Start the emulator and start "The iDOLM@STER", everything should work.

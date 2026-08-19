@@ -1,48 +1,61 @@
 #pragma once
 #include "../Iop_Module.h"
-#include <stdio.h>
+#include <string>
 #include <windows.h>
-namespace Iop {
-    typedef enum ac_uart_flag
-    {
-        AC_UART_FLAG_READ = 0x1,
-        AC_UART_FLAG_WRITE = 0x2,
-        AC_UART_FLAG_BOTH = 0x3,
-    } UartFlag;
 
-    typedef struct ac_uart_attr
-    {
-        int32 ua_speed;
-        int32 ua_fifo;
-        int32 ua_loopback;
-        int32 ua_padding;
-    } acUartAttrData;
-    class UARTDriver : public CModule
-    {
-    public:
+namespace Iop
+{
+	typedef enum ac_uart_flag
+	{
+		AC_UART_FLAG_READ = 0x1,
+		AC_UART_FLAG_WRITE = 0x2,
+		AC_UART_FLAG_BOTH = 0x3,
+	} UartFlag;
 
-        UARTDriver(uint8*);
-        virtual ~UARTDriver();
+	typedef struct ac_uart_attr
+	{
+		int32 ua_speed;
+		int32 ua_fifo;
+		int32 ua_loopback;
+		int32 ua_padding;
+	} acUartAttrData;
 
-        std::string GetId() const override;
-        std::string GetFunctionName(unsigned int) const override;
-        void Invoke(CMIPS&, unsigned int) override;
+	class UARTDriver : public CModule
+	{
+	public:
+		UARTDriver(uint8*);
+		UARTDriver(uint8*, bool, const std::string&);
+		virtual ~UARTDriver();
 
-        void SaveState(Framework::CZipArchiveWriter&) const override;
-        void LoadState(Framework::CZipArchiveReader&) override;
+		std::string GetId() const override;
+		std::string GetFunctionName(unsigned int) const override;
+		void Invoke(CMIPS&, unsigned int) override;
 
-    private:
-        HANDLE m_pipe_handle;
-        uint8* m_ram = nullptr;
+		void SaveState(Framework::CZipArchiveWriter&) const override;
+		void LoadState(Framework::CZipArchiveReader&) override;
 
-        acUartAttrData m_uartAttrData;
+	private:
+		enum class TRANSPORT
+		{
+			NAMED_PIPE,
+			SERIAL_PORT,
+		};
 
-        int32 Read(uint32, int);
-        int32 Write(uint32, int);
-        uint32 Wait(UartFlag, int);
+		void OpenNamedPipe();
+		void OpenSerialPort(const std::string&);
+		DWORD GetBytesAvailable();
+		bool IsOpen() const;
 
-        uint32 GetAttr(acUartAttrData* attr);
-        uint32 SetAttr(const acUartAttrData* attr);
-    };
+		HANDLE m_deviceHandle = INVALID_HANDLE_VALUE;
+		TRANSPORT m_transport = TRANSPORT::NAMED_PIPE;
+		uint8* m_ram = nullptr;
+		acUartAttrData m_uartAttrData = {9600, 1, 0, 0};
+
+		int32 Read(uint32, int);
+		int32 Write(uint32, int);
+		uint32 Wait(UartFlag, int);
+
+		uint32 GetAttr(acUartAttrData* attr);
+		uint32 SetAttr(const acUartAttrData* attr);
+	};
 }
-

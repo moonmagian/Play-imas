@@ -11,6 +11,8 @@
 
 #define PREF_PS2_ARCADE_IO_SERVER_ENABLED ("ps2.arcade.ioserver.enabled")
 #define PREF_PS2_ARCADE_IO_SERVER_PORT ("ps2.arcade.ioserver.port")
+#define PREF_PS2_ARCADE_USE_REAL_CARD_READER ("ps2.arcade.cardreader.usereal")
+#define PREF_PS2_ARCADE_CARD_READER_COM_PORT ("ps2.arcade.cardreader.comport")
 
 #define PREF_PS2_LIMIT_FRAMERATE ("ps2.limitframerate")
 

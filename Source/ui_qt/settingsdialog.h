@@ -38,6 +38,8 @@ private slots:
 	void on_button_browseArcadeRomsDir_clicked();
 	void on_checkBox_enableArcadeIOServer_clicked(bool checked);
 	void on_lineEdit_arcadeIOServerPort_textChanged(const QString& value);
+	void on_checkBox_useRealCardReader_clicked(bool checked);
+	void on_comboBox_cardReaderCom_currentTextChanged(const QString& value);
 
 	//Video Page
 	void on_checkBox_widescreenOutput_clicked(bool checked);

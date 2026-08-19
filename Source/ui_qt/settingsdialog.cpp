@@ -1,18 +1,43 @@
 #include "settingsdialog.h"
 #include <cassert>
 #include <cmath>
+#include <iterator>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QSignalBlocker>
 #include "ui_settingsdialog.h"
 #include "PS2VM_Preferences.h"
 #include "PreferenceDefs.h"
 #include "../gs/GSH_OpenGL/GSH_OpenGL.h"
 #include "QStringUtils.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #ifdef HAS_GSH_VULKAN
 #include "gs/GSH_Vulkan/GSH_VulkanDeviceInfo.h"
 Q_DECLARE_METATYPE(GSH_Vulkan::VULKAN_DEVICE);
 #endif
+
+namespace
+{
+	void PopulateSerialPorts(QComboBox* comboBox)
+	{
+#ifdef _WIN32
+		wchar_t devicePath[1024] = {};
+		for(unsigned int portNumber = 1; portNumber <= 256; portNumber++)
+		{
+			auto portName = QString("COM%1").arg(portNumber);
+			auto portNameWide = portName.toStdWString();
+			if(QueryDosDeviceW(portNameWide.c_str(), devicePath, std::size(devicePath)) != 0)
+			{
+				comboBox->addItem(portName);
+			}
+		}
+#endif
+	}
+}
 
 SettingsDialog::SettingsDialog(QWidget* parent)
     : QDialog(parent)
@@ -24,6 +49,11 @@ SettingsDialog::SettingsDialog(QWidget* parent)
 	ui->stackedWidget->setCurrentIndex(0);
 
 	ui->lineEdit_arcadeIOServerPort->setValidator(new QIntValidator(0, 65535, this));
+	ui->comboBox_cardReaderCom->setEditable(true);
+	{
+		QSignalBlocker blocker(ui->comboBox_cardReaderCom);
+		PopulateSerialPorts(ui->comboBox_cardReaderCom);
+	}
 
 	// this assert is to ensure no one adds an item to the combobox through qt creator by accident
 	assert(ui->comboBox_gs_selection->count() == 0);
@@ -88,6 +118,19 @@ void SettingsDialog::LoadPreferences()
 	ui->edit_arcadeRoms_dir->setText(PathToQString(CAppConfig::GetInstance().GetPreferencePath(PREF_PS2_ARCADEROMS_DIRECTORY)));
 	ui->checkBox_enableArcadeIOServer->setChecked(CAppConfig::GetInstance().GetPreferenceBoolean(PREF_PS2_ARCADE_IO_SERVER_ENABLED));
 	ui->lineEdit_arcadeIOServerPort->setText(QString::number(CAppConfig::GetInstance().GetPreferenceInteger(PREF_PS2_ARCADE_IO_SERVER_PORT)));
+	auto useRealCardReader = CAppConfig::GetInstance().GetPreferenceBoolean(PREF_PS2_ARCADE_USE_REAL_CARD_READER);
+	auto cardReaderComPort = QString::fromStdString(CAppConfig::GetInstance().GetPreferenceString(PREF_PS2_ARCADE_CARD_READER_COM_PORT));
+	{
+		QSignalBlocker blocker(ui->comboBox_cardReaderCom);
+		if(!cardReaderComPort.isEmpty() && (ui->comboBox_cardReaderCom->findText(cardReaderComPort, Qt::MatchFixedString) == -1))
+		{
+			ui->comboBox_cardReaderCom->addItem(cardReaderComPort);
+		}
+		ui->comboBox_cardReaderCom->setCurrentText(cardReaderComPort);
+	}
+	ui->checkBox_useRealCardReader->setChecked(useRealCardReader);
+	ui->label_cardReaderCom->setEnabled(useRealCardReader);
+	ui->comboBox_cardReaderCom->setEnabled(useRealCardReader);
 
 	int factor = CAppConfig::GetInstance().GetPreferenceInteger(PREF_CGSH_OPENGL_RESOLUTION_FACTOR);
 	int factor_index = std::log2(factor);
@@ -140,6 +183,19 @@ void SettingsDialog::on_checkBox_enableArcadeIOServer_clicked(bool checked)
 void SettingsDialog::on_lineEdit_arcadeIOServerPort_textChanged(const QString& value)
 {
 	CAppConfig::GetInstance().SetPreferenceInteger(PREF_PS2_ARCADE_IO_SERVER_PORT, value.toInt());
+}
+
+void SettingsDialog::on_checkBox_useRealCardReader_clicked(bool checked)
+{
+	CAppConfig::GetInstance().SetPreferenceBoolean(PREF_PS2_ARCADE_USE_REAL_CARD_READER, checked);
+	ui->label_cardReaderCom->setEnabled(checked);
+	ui->comboBox_cardReaderCom->setEnabled(checked);
+}
+
+void SettingsDialog::on_comboBox_cardReaderCom_currentTextChanged(const QString& value)
+{
+	auto portName = value.trimmed().toStdString();
+	CAppConfig::GetInstance().SetPreferenceString(PREF_PS2_ARCADE_CARD_READER_COM_PORT, portName.c_str());
 }
 
 //Video Page ---------------------------------

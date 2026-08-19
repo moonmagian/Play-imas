@@ -106,12 +106,14 @@ void CNamcoSys246Driver::PrepareEnvironment(CPS2VM* virtualMachine, const ARCADE
 		iopBios->RegisterHleModuleReplacement("rom0:PADMAN", padManModule);
 		iopBios->RegisterHleModuleReplacement("rom0:SIO2MAN", padManModule);
 
-        auto uartModule = std::make_shared<Iop::UARTDriver>(virtualMachine->m_iop->m_ram);
-        iopBios->RegisterModule(uartModule);
-        iopBios->RegisterHleModuleReplacement("UART_driver", uartModule);
-        iopBios->RegisterHleModuleReplacement("mc0:ACUART", uartModule);
-        iopBios->RegisterHleModuleReplacement("ac0:ACUART", uartModule);
-        iopBios->RegisterHleModuleReplacement("acuart", uartModule);
+		auto useRealCardReader = CAppConfig::GetInstance().GetPreferenceBoolean(PREF_PS2_ARCADE_USE_REAL_CARD_READER);
+		auto cardReaderComPort = CAppConfig::GetInstance().GetPreferenceString(PREF_PS2_ARCADE_CARD_READER_COM_PORT);
+		auto uartModule = std::make_shared<Iop::UARTDriver>(virtualMachine->m_iop->m_ram, useRealCardReader, cardReaderComPort);
+		iopBios->RegisterModule(uartModule);
+		iopBios->RegisterHleModuleReplacement("UART_driver", uartModule);
+		iopBios->RegisterHleModuleReplacement("mc0:ACUART", uartModule);
+		iopBios->RegisterHleModuleReplacement("ac0:ACUART", uartModule);
+		iopBios->RegisterHleModuleReplacement("acuart", uartModule);
 
 		auto aveNetwork = std::make_shared<Iop::Namco::CAveNetworkContext>(*iopBios, virtualMachine->m_iop->m_ram);
 		auto aveTcp = std::make_shared<Iop::Namco::CAveTcp>(aveNetwork);

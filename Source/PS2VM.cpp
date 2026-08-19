@@ -100,6 +100,8 @@ CPS2VM::CPS2VM()
 
 	CAppConfig::GetInstance().RegisterPreferenceBoolean(PREF_PS2_ARCADE_IO_SERVER_ENABLED, false);
 	CAppConfig::GetInstance().RegisterPreferenceInteger(PREF_PS2_ARCADE_IO_SERVER_PORT, 9876);
+	CAppConfig::GetInstance().RegisterPreferenceBoolean(PREF_PS2_ARCADE_USE_REAL_CARD_READER, false);
+	CAppConfig::GetInstance().RegisterPreferenceString(PREF_PS2_ARCADE_CARD_READER_COM_PORT, "COM1");
 }
 
 //////////////////////////////////////////////////
