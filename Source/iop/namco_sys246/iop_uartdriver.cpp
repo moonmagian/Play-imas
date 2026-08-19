@@ -111,14 +111,15 @@ void Iop::UARTDriver::OpenSerialPort(const std::string& portName)
 	serialConfig.fParity = FALSE;
 	serialConfig.fOutxCtsFlow = FALSE;
 	serialConfig.fOutxDsrFlow = FALSE;
-	serialConfig.fDtrControl = DTR_CONTROL_DISABLE;
+	// ACUART asserts its modem-control outputs even though it doesn't use hardware handshaking.
+	serialConfig.fDtrControl = DTR_CONTROL_ENABLE;
 	serialConfig.fDsrSensitivity = FALSE;
 	serialConfig.fTXContinueOnXoff = TRUE;
 	serialConfig.fOutX = FALSE;
 	serialConfig.fInX = FALSE;
 	serialConfig.fErrorChar = FALSE;
 	serialConfig.fNull = FALSE;
-	serialConfig.fRtsControl = RTS_CONTROL_DISABLE;
+	serialConfig.fRtsControl = RTS_CONTROL_ENABLE;
 	serialConfig.fAbortOnError = FALSE;
 	if(!SetCommState(m_deviceHandle, &serialConfig))
 	{
@@ -139,7 +140,7 @@ void Iop::UARTDriver::OpenSerialPort(const std::string& portName)
 		closeAndThrow("clear pending data from");
 	}
 
-	CLog::GetInstance().Print(LOG_NAME, "Using real card reader on '%s' (9600 8-N-1, no flow control).\r\n", portName.c_str());
+	CLog::GetInstance().Print(LOG_NAME, "Using real card reader on '%s' (9600 8-N-1, no flow control, DTR/RTS asserted).\r\n", portName.c_str());
 }
 
 bool Iop::UARTDriver::IsOpen() const
